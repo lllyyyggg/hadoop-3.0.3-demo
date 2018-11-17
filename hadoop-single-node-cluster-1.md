@@ -111,43 +111,43 @@ $ chmod 0600 ~/.ssh/authorized_keys
 
 接下来将要执行本地的`MapReduce`作业。当然作业也可以用YARN调度，这里不做讲解。
 
-- 格式化文件系统
+- 1 格式化文件系统
  
 ```
 $ bin/hdfs namenode -format			
 ```	
-- 开启`NameNode`进程和`DataNode`进程
+- 2 开启`NameNode`进程和`DataNode`进程
 
 ```
 $ sbin/start-dfs.sh
 ```
 `Hadoop`的日志会被输出到`$HADOOP_LOG_DIR`目录(默认是`$HADOOP_HOME/logs`)。
 
-- 此时在浏览器里面访问NameNode的接口，默认是
+- 3 此时在浏览器里面访问NameNode的接口，默认是
 
 ```
 NameNode - http://localhost:9870/
 ```
-- 使HDFS目录执行MapReduce工作。
+- 4 使HDFS目录执行MapReduce工作。
 
 ```
 $ bin/hdfs dfs -mkdir /user
 $ bin/hdfs dfs -mkdir /user/<username>
 ```
 
-- 将input文件夹复制到hdfs中
+- 5 将input文件夹复制到hdfs中
 
 ```
 $ bin/hdfs dfs -mkdir input
 $ bin/hdfs dfs -put etc/hadoop/*.xml input
 ```
 
-- 开始执行提供的例子
+- 6 开始执行提供的例子
 
 ```
 $ bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.0.3.jar grep input output 'dfs[a-z.]+'
 ```
-- 测试输出文件夹：将output文件夹从分布式文件系统复制到本地系统，然后进行查看。
+- 7 测试输出文件夹：将output文件夹从分布式文件系统复制到本地系统，然后进行查看。
 
 ```
 $ bin/hdfs dfs -get output output
@@ -159,14 +159,69 @@ $ cat output/*
 $ bin/hdfs dfs -cat output/*
 ```
 
-- 当你完成后，停止守护进程。
+- 8 当你完成后，停止守护进程。
 
 ```
 $ sbin/stop-dfs.sh
 ```
+#### `在单节点的为分布式模式下使用YARN`
 
+你可以在伪分布式模式下基于YARN运行MapReduce任务，仅仅通过设置一些参数并同时运行ResourceManager守护进程和NodeManager守护进程。
 
+接下来的命令假设上面`执行`的指令的前4步已经执行了。
 
+- 1 首先配置参数如下：
+
+`etc/hadoop/mapred-site.xml`
+ 
+```
+ <configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+</configuration>
+<configuration>
+    <property>
+        <name>mapreduce.application.classpath</name>
+        <value>$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/*:$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/lib/*</value>
+    </property>
+</configuration>
+```	
+
+`etc/hadoop/yarn-site.xml`
+
+```
+<configuration>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.env-whitelist</name>
+        <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
+    </property>
+</configuration>
+```
+- 2 开启ResourceManager和NodeManager
+
+```
+$ sbin/start-yarn.sh
+```
+
+- 3 在浏览器的web接口浏览ResourceManager，默认的浏览路径为
+
+```
+ResourceManager - http://localhost:8088/
+```
+
+- 4 执行MapReduce任务
+
+- 5 当你执行完毕，关闭守护进程
+
+```
+$ sbin/stop-yarn.sh
+```
 
 
 
