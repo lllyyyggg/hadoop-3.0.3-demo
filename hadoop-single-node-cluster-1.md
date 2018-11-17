@@ -41,8 +41,6 @@ export JAVA_HOME=/usr/java/latest
 * 伪分布式模式。
 * 全分布式模式。
 
-<strong style="color:red;">该文件主要描述`Standalone`模式。</strong>
-
 ### `单机模式操作`
 
 默认，`hadoop`被配置为非分布式模式，作为一个单独的`Java`进程。这对于调试很有用。
@@ -55,11 +53,12 @@ export JAVA_HOME=/usr/java/latest
 $ mkdir input
 $ cp etc/hadoop/*.xml input/
 ```
-打印结果
+运行小例子，并显示结果
 
 ```
 $ bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.0.3.jar grep input output 'dfs[a-z.]+'
-$ cat output/*
+$ cat output/*		
+//result: 1	dfsadmin
 ```
 
 ### `伪分布式模式操作`
@@ -76,6 +75,11 @@ $ cat output/*
         <name>fs.defaultFS</name>
         <value>hdfs://localhost:9000</value>
     </property>
+    <!--配置临时文件夹的路径-->
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/home/hadoop/lllyyyggg/tmp</value>
+    </property>
 </configuration>
 ```
 表示默认的defaultFS的地址为`http://localhost:9000`
@@ -87,6 +91,15 @@ $ cat output/*
     <property>
         <name>dfs.replication</name>
         <value>1</value>
+    </property>
+    <!--配置namenode和datanode临时文件夹-->
+	<property>
+       <name>dfs.namenode.name.dir</name>
+       <value>/home/hadoop/lllyyyggg/tmp/dfs/name</value>
+	</property>
+    <property>
+       <name>dfs.datanode.data.dir</name>
+       <value>/home/hadoop/lllyyyggg/tmp/dfs/data</value>
     </property>
 </configuration>
 ```
@@ -121,6 +134,29 @@ $ bin/hdfs namenode -format
 ```
 $ sbin/start-dfs.sh
 ```
+接下来会看到
+
+```
+Starting namenodes on [localhost]
+Starting datanodes
+Starting secondary namenodes [Slave1]
+```
+使用jps命令查看NameNode和DataNode是否已经开启
+
+```
+$ jps
+```
+
+```
+33907 Jps
+33748 SecondaryNameNode
+33542 DataNode
+33423 NameNode
+```
+说明守护进程都开启成功。
+
+> 如果出现DataNode没启动，很可能是`-format`的时候保留了原来的`DataNodeId`,导致ID不一致，那么此时可以删除`dfs.datanode.data.dir`下的数据，重新格式化，重新启动就OK了。
+
 `Hadoop`的日志会被输出到`$HADOOP_LOG_DIR`目录(默认是`$HADOOP_HOME/logs`)。
 
 - 3 此时在浏览器里面访问NameNode的接口，默认是
@@ -134,6 +170,7 @@ NameNode - http://localhost:9870/
 $ bin/hdfs dfs -mkdir /user
 $ bin/hdfs dfs -mkdir /user/<username>
 ```
+> 如果这里出现`Call from xxx to localhost:9000 failed on connection exception`，一般是因为`NameNode`启动不正常。也就是`$ sbin/start-dfs.sh`.
 
 - 5 将input文件夹复制到hdfs中
 
@@ -141,12 +178,16 @@ $ bin/hdfs dfs -mkdir /user/<username>
 $ bin/hdfs dfs -mkdir input
 $ bin/hdfs dfs -put etc/hadoop/*.xml input
 ```
+> 如果在创建文件夹或者复制文件的时候出现文件夹找不到的情况，`$ bin/hadoop fs -mkdir -p input`
 
 - 6 开始执行提供的例子
 
 ```
 $ bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.0.3.jar grep input output 'dfs[a-z.]+'
 ```
+
+此时的input就是hdfs中的input,output就是hdfs中的output了。
+
 - 7 测试输出文件夹：将output文件夹从分布式文件系统复制到本地系统，然后进行查看。
 
 ```
@@ -164,7 +205,16 @@ $ bin/hdfs dfs -cat output/*
 ```
 $ sbin/stop-dfs.sh
 ```
-#### `在单节点的为分布式模式下使用YARN`
+
+> 注意的是，如果你想使用Standalone模式，你必须注释掉以下配置。
+
+```
+<property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://localhost:9000</value>
+</property>
+```
+#### `在单节点的伪分布式模式下使用YARN`
 
 你可以在伪分布式模式下基于YARN运行MapReduce任务，仅仅通过设置一些参数并同时运行ResourceManager守护进程和NodeManager守护进程。
 
