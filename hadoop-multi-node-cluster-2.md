@@ -1,6 +1,6 @@
 # `Hadoop全分布式`
 
-### `目的`
+### `一 目的`
 
 使你能够安装并且将Hadoop部署在多节点以至于更多的上千节点上。
 
@@ -12,7 +12,7 @@ Java JDK
 Hadoop-x.x.x.tar.gz
 ```
 
-### `安装`
+### `二 安装`
 
 安装Hadoop集群首先要把文件打包到集群中所有的机器上并解压。根据硬件划分功能是非常重要的。
 
@@ -20,7 +20,60 @@ Hadoop-x.x.x.tar.gz
 
 其他的集群中的机器通常同时充当`DataNode`和`NodeManager`。这是两个工作线程。
 
-### `配置Hadoop在非安全模式`
+##### `修改/etc/hostname和/etc/hosts`
+
+在每台主机上修改这两个文件，其中/etc/hostname是修改主机名。而/etc/hosts是配置主机关系。
+
+```
+115.157.200.78  master
+115.157.200.79  slave-001
+115.157.200.80  slave-002
+```
+然后使用如下命令失效:
+
+```
+$ service network-manager restart
+```
+##### `然后将hadoop-x.x.x.tar.gz复制到所有机器上`
+
+```
+$ scp hadoop-x.x.x.tar.gz hadoop@slave-001:/home/lllyyyggg/
+```
+
+##### `然后在master和所有slave之间建立ssh互信`
+
+- 在所有机器上运行`$ ssh-keygen -t rsa`
+- 接下来将master的公匙放到authorization_keys里。`sudo cat id_rsa.pub >> authorization_keys`
+- 将authorization_keys放到其他机器的～/.ssh目录下`$ sudo scp authorization_keys hadoop@slave-001:~/.ssh/`
+- 然后将authorized_key的权限修改为644 `$ chmod 644 authorized_key`
+- 然后`ssh slave-001`，首次需要输入密码，然后exit，然后再次`ssh slave-001`，不需要密码就成功了。
+
+##### `在每台服务器上都配置JAVA_HOME`
+
+```
+$ sudo vim /etc/profile
+&
+export JAVA_HOME=/xxx
+&
+$ source /etc/profile
+```
+
+##### `在每台服务器上都配置HADOOP_HOME`
+```
+$ sudo vim /etc/profile
+&
+export HADOOP_HOME=/xxx
+&
+$ source /etc/profile
+```
+
+##### `然后开始在所有机器上配置HDFS,YARN和MAPREDUCE，必须是一样的`
+
+具体所有的配置都在下第三部分。
+
+
+
+### `三 配置Hadoop在非安全模式`
 
 `Hadoop`的Java配置分为两个重要方面，这两个方面对应的配置文件如下:
 
@@ -174,7 +227,7 @@ export HADOOP_HOME
 	|mapreduce.jobhistory.intermediate-done-dir|/mr-history/tmp|历史文件存储目录，历史文件由MapReduce任务产生|
 	|mapreduce.jobhistory.done-dir|/mr-history/done|历史文件被MR JobHistory Server管理的目录|
 	
-### `监测NodeManagers的健康`
+### `四 监测NodeManagers的健康`
 
 Hadoop提供一种机制，能够周期性的使NodeManagers运行管理员提供的脚本，去查看NodeManager是否健康。
 
@@ -190,19 +243,19 @@ Hadoop提供一种机制，能够周期性的使NodeManagers运行管理员提�
 
 健康检测脚本不应该给出ERROR，如果仅仅是本地磁盘损坏。NodeManager有权限去周期性的检查本地磁盘的健康(nodemanager-local-dirs and nodemanager-log-dirs)和达到坏目录数量的阈值后，整个节点将会被标记为`unhealthy`状态。不管磁盘是突袭还是失败在启动磁盘的时候都会被脚本检测出来。
 
-### `Slave文件`
+### `五 Slave文件`
 
 用来列出所有的工作节点的hostname和ip地址，在`etc/hadoop/workers`文件中，帮助脚本将会使用`etc/hadoop/workers`文件去执行命令在一些主机上马上。它将不会对于任何基于Java的Hadoop配置。为了去使用这个功能，`ssh`互信必须建立起来。
 
-### `Hadoop机架意识`
+### `六 Hadoop机架意识`
 
 许多Hadoop组件都是有机架意识的，能够充分利用网络拓扑结构的到性能和安全上去。Hadoop守护进程获取机架信息通过唤起一个管理员配置的模块。这里就不做详细说明了，更多到官网去看更加详细的说明。
 
-### `日志`
+### `七 日志`
 
 Hadoop利用Log4j来打印日志。可以编辑`etc/hadoop/log4j.properties`文件去定制守护进程的日志配置。
 
-### `操作Hadoop集群`
+### `八 操作Hadoop集群`
 
 当所有的必要的配置都完成之后，将文件分发到`HADOOP_CONF_DIR`目录下在集群中所有机器中，这个目录在所有机器上必须是一样的。
 
@@ -264,7 +317,7 @@ $ sbin/start-yarn.sh
 $ bin/mapred --daemon start historyserver
 ```
 
-### `Web Interfaces`
+### `九 Web Interfaces`
 
 一旦你的Hadoop集群开启之后，你可以通过以下web-ui来访问不通组件:
 
