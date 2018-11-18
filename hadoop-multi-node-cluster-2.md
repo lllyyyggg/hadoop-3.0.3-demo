@@ -263,3 +263,13 @@ $ sbin/start-yarn.sh
 ```
 $ bin/mapred --daemon start historyserver
 ```
+
+### `Web Interfaces`
+
+一旦你的Hadoop集群开启之后，你可以通过以下web-ui来访问不通组件:
+
+|进程|web-ui|说明|
+|------|:------:|------|
+|NameNode|nm:port|默认是9870端口|
+|ResourceManager|rm:port|默认是8088端口|
+|MapReduce JobHistory Server|jhs:port|默认是19888端口|
