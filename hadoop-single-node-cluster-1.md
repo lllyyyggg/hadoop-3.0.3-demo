@@ -216,7 +216,7 @@ $ sbin/stop-dfs.sh
 ```
 #### `在单节点的伪分布式模式下使用YARN`
 
-你可以在伪分布式模式下基于YARN运行MapReduce任务，仅仅通过设置一些参数并同时运行ResourceManager守护进程和NodeManager守护进程。
+你可以在伪分布式模式下基于`YARN`运行`MapReduce`任务，仅仅通过设置一些参数并同时运行`ResourceManager`守护进程和`NodeManager`守护进程。
 
 接下来的命令假设上面`执行`的指令的前4步已经执行了。
 
@@ -230,14 +230,13 @@ $ sbin/stop-dfs.sh
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
     </property>
-</configuration>
-<configuration>
     <property>
         <name>mapreduce.application.classpath</name>
         <value>$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/*:$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/lib/*</value>
     </property>
 </configuration>
 ```	
+> 不过在此之前必须将`HADOOP_HOME`配置到`/etc/profile`中去，`export HADOOP_HOME=xxx`，然后`$ source /etc/profile`使环境变量生效。
 
 `etc/hadoop/yarn-site.xml`
 
@@ -259,6 +258,8 @@ $ sbin/stop-dfs.sh
 $ sbin/start-yarn.sh
 ```
 
+> 此处如果ResourceManager和NodeManager没有开启，请到`log/xxx-resourcemanager-xx.log`查看日志。如果是`Illegal to have multiple roots`错误，那么就可能是你的配置文件里面有两个根目录如`<configuration>`。
+
 - 3 在浏览器的web接口浏览ResourceManager，默认的浏览路径为
 
 ```
@@ -267,18 +268,67 @@ ResourceManager - http://localhost:8088/
 
 - 4 执行MapReduce任务
 
+```
+bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.0.3.jar grep input output 'dfs[a-z.]+'
+```
+然后你会看到结果
+
+```
+...
+2018-11-18 10:54:38,326 INFO mapreduce.Job:  map 0% reduce 0%
+2018-11-18 10:54:46,413 INFO mapreduce.Job:  map 0% reduce 100%
+2018-11-18 10:54:46,422 INFO mapreduce.Job: Job job_1542509260827_0002 completed successfully
+2018-11-18 10:54:46,510 INFO mapreduce.Job: Counters: 40
+...
+```
+
+通过如下命令查看任务执行结果
+
+```
+bin/yarn application -status application_1542509260827_0002
+```
+
+会有如下显示
+
+```
+Application Report : 
+	Application-Id : application_1542509260827_0002
+	Application-Name : grep-sort
+	Application-Type : MAPREDUCE
+	User : hadoop
+	Queue : default
+	Application Priority : 0
+	Start-Time : 1542509662974
+	Finish-Time : 1542509685077
+	Progress : 100%
+	State : FINISHED
+	Final-State : SUCCEEDED
+	Tracking-URL : http://Slave1:19888/jobhistory/job/job_1542509260827_0002
+	RPC Port : 35825
+	AM Host : Slave1
+	Aggregate Resource Allocation : 55010 MB-seconds, 29 vcore-seconds
+	Aggregate Resource Preempted : 0 MB-seconds, 0 vcore-seconds
+	Log Aggregation Status : DISABLED
+	Diagnostics : 
+	Unmanaged Application : false
+	Application Node Label Expression : <Not set>
+	AM container Node Label Expression : <DEFAULT_PARTITION>
+	TimeoutType : LIFETIME	ExpiryTime : UNLIMITED	RemainingTime : -1seconds
+```
+
+
 - 5 当你执行完毕，关闭守护进程
 
 ```
 $ sbin/stop-yarn.sh
 ```
+### `小结`
+到此单节点上运行Standalone模式和伪分布式模式已经讲完了，大家应该有比较深刻的理解了。
 
+主要的进程有如下:
 
-
-
-
-
-
-
-
-
+* `NameNode`
+* `DataNode`
+* `SecondaryNameNode`
+* `ResourceManager`
+* `NodeManager`
