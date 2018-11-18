@@ -326,3 +326,6 @@ $ bin/mapred --daemon start historyserver
 |NameNode|nm:port|默认是9870端口|
 |ResourceManager|rm:port|默认是8088端口|
 |MapReduce JobHistory Server|jhs:port|默认是19888端口|
+
+明天希望能自己配置一下所有的配置文件。
+
