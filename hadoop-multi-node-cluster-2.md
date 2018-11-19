@@ -34,6 +34,9 @@ Hadoop-x.x.x.tar.gz
 ```
 $ service network-manager restart
 ```
+
+然后在`etc/hadoop/workers`文件的每一行添加`slave`节点的`hostname`，用于联系`master`和`slave`之间的关系。
+
 ##### `然后将hadoop-x.x.x.tar.gz复制到所有机器上`
 
 ```
@@ -69,9 +72,7 @@ $ source /etc/profile
 
 ##### `然后开始在所有机器上配置HDFS,YARN和MAPREDUCE，必须是一样的`
 
-具体所有的配置都在下第三部分。
-
-
+具体所有的配置都在下第三部分，参考`./xmls`目录。
 
 ### `三 配置Hadoop在非安全模式`
 
@@ -114,13 +115,13 @@ export HDFS_NAMENODE_OPTS="-XX:+UseParallelGC -Xmx4g"
 
 其他有用的参数还有如下:
 
-- HADOOP_PID_DIR - 守护进程ID文件的存储路径
-- HADOOP_LOG_DIR - 守护进程日志文件存储目录。日志文件如果不存在会自动创建。
-- HADOOP_HEAPSIZE_MAX - 最大使用的Java堆内存。这个值可以被每个守护进程的基础配置覆盖掉，同时用合适的上面所提到的定制的_OPTS变量。例如，设置`HADOOP_HEAPSIZE_MAX=1g`并且设置`HADOOP_NAMENODE_OPTS="-Xmx5g"`将会配置NameNode 5G的堆内存。
+- `HADOOP_PID_DIR` - 守护进程ID文件的存储路径
+- `HADOOP_LOG_DIR` - 守护进程日志文件存储目录。日志文件如果不存在会自动创建。
+- `HADOOP_HEAPSIZE_MAX` - 最大使用的Java堆内存。这个值可以被每个守护进程的基础配置覆盖掉，同时用合适的上面所提到的定制的_OPTS变量。例如，设置`HADOOP_HEAPSIZE_MAX=1g`并且设置`HADOOP_NAMENODE_OPTS="-Xmx5g"`将会配置`NameNode` 5G的堆内存。
 
 在大多数情况下，你需要指定`HADOOP_PID_DIR` 和 `HADOOP_LOG_DIR`，那么这样一来，他们只能被将使用`Hadoop`守护进程的使用者写入。否则，可能出现符号链接攻击(`symlink attack`)。
 
-通常你也需要配置HADOOP_HOME，在系统级别的环境配置文件中，如:/etc/profile.d。
+通常你也需要配置`HADOOP_HOME`，在系统级别的环境配置文件中，如:`/etc/profile.d`。
 
 ```
 HADOOP_HOME=/path/to/hadoop
